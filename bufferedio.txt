@@ -1,0 +1,11 @@
+Example
+    -Say you write() one character at a time to a file
+    -Instead of making a system call for each write, you might data in a user space
+    buffer before calling the kernel
+    -Also, the buffer program will probably wait until the data is an integer multiple
+    of the filesystem's block size, because that's more efficient
+    -Same thing for reading. For example reading one line at a time from a text file.
+    It makes sense for your program but it's slow for the system, so it just loads a bunch of data
+    into memory at once, and then feeds you small chunks from memory.
+
+Basically, it can be much faster than standard io
