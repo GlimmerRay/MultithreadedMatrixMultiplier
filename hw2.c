@@ -67,6 +67,10 @@ int main(int argc, char *argv[]){
     return 0;
 }
 
+// Takes a filename (for a text file), an empty file pointer, and an empty matrix
+// and returns a filled matrix.  
+// Assumes that matrix entries are delimited by spaces (any number) and that
+// matrix rows are delimited by newlines.
 int* fileToMatrix(char* filename, FILE* fp, int* matrix) {
     
     int c, number, index;
