@@ -3,6 +3,11 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+// TODO: 
+// -accept variable size matrices
+// -check proper dimensions for dot product
+// -test
+
 #define NUM_THREADS 12
 
 /*
@@ -56,26 +61,21 @@ int main(int argc, char *argv[]){
     mat2ptr = fileToMatrix(argv[2], fp2, (int*)mat2);
     int *mat3ptr = (int*)mat3;
 
-    printf("%d\n", getRowLength(argv[1], fp2));
-    printf("%d\n", getColLength(argv[1], fp2));
-    printf("%d\n", matrixFileIsValid(argv[1], fp2));
-    printf("%d\n", rowsSameLength(argv[1], fp2));
-
-    // for (int i=0; i<12; i++) {
-    //     struct thread_params t_params = {mat1ptr, mat2ptr, mat3ptr, i};
-    //     pthread_create(&threads[i], NULL, calcOutputRow, (void *)&t_params);
-    //     pthread_join(threads[i], NULL);
-    // }
+    for (int i=0; i<12; i++) {
+        struct thread_params t_params = {mat1ptr, mat2ptr, mat3ptr, i};
+        pthread_create(&threads[i], NULL, calcOutputRow, (void *)&t_params);
+        pthread_join(threads[i], NULL);
+    }
     
-    // printf("Printing mat1\n\n");
-    // printMatrix(mat1ptr);
-    // printf("Printing mat2\n\n");
-    // printMatrix(mat2ptr);
-    // printf("Printing mat3\n\n");
-    // printMatrix(mat3ptr);
-    // printf("Exiting from main\n\n");
-    // pthread_exit(NULL);
-    // return 0;
+    printf("Printing mat1\n\n");
+    printMatrix(mat1ptr);
+    printf("Printing mat2\n\n");
+    printMatrix(mat2ptr);
+    printf("Printing mat1 * mat2\n\n");
+    printMatrix(mat3ptr);
+    printf("Exiting from main\n\n");
+    pthread_exit(NULL);
+    return 0;
 }
 
 // all rows must be same length
@@ -141,6 +141,8 @@ int rowsSameLength(char* filename, FILE* fp) {
     return 1;
 }
 
+// Takes a filename and an empty file pointer
+// Makes sure there are no characters other than '-', ' ', '\n', digits, and EOF 
 int validCharsOnly(char* filename, FILE* fp) {
     char c;
     int colLength = 0;
@@ -156,14 +158,15 @@ int validCharsOnly(char* filename, FILE* fp) {
     return 1;
 }
 
+// Takes a filename and an empty file pointer
+// Makes sure '-' only appears before a string of digits
 int validNumbersOnly(char* filename, FILE* fp) {
-
     char c;
     fp = fopen(filename, "r");
     c = fgetc(fp);
     while (c != EOF) {
-        if (c == '-') {
-            c = fgetc(fp); // make sure the character after a dash is a digit
+        if (c == '-') { // Detected the start of a possible negative number
+            c = fgetc(fp); // make sure the character after a negative sign is a digit
             if (!isdigit(c)) {
                 printf("ERROR: minus sign followed by non digit");
                 return -1;
@@ -193,8 +196,9 @@ int validNumbersOnly(char* filename, FILE* fp) {
     return 1;
 } 
 
+// Takes the filename and an empty file pointer.
+// Returns the length of the first row of a matrix file.
 int getRowLength(char* filename, FILE* fp) {
-    int digit, row, col, index, number;
     char c;
     int rowLength = 0;
     fp = fopen(filename, "r");
@@ -212,6 +216,9 @@ int getRowLength(char* filename, FILE* fp) {
     return rowLength;
 }
 
+// Takes the filename and an empty file pointer.
+// Returns the column length of a matrix file.
+// Simply counts the number of newline characters.
 int getColLength(char* filename, FILE* fp) {
     char c;
     int colLength = 0;
@@ -227,6 +234,15 @@ int getColLength(char* filename, FILE* fp) {
     return colLength;
 }
 
+// Takes a filename (for a text file), an empty file pointer, and an empty matrix
+// and returns a filled matrix.  
+// Assumes that matrix entries are delimited by spaces (any number) and that
+// matrix rows are delimited by newlines.
+//
+// PROBLEMS
+// assumes single digit entries
+// assumes consistent row lengths
+// doesn't handle negative numbers
 int* fileToMatrix(char* filename, FILE* fp, int* matrix) {
 
     // If the number of columns in a row is inconsistant we want to throw an error
@@ -254,6 +270,9 @@ int* fileToMatrix(char* filename, FILE* fp, int* matrix) {
     return matrix;
 }
 
+// UPDATES NEEDED FOR DYNAMIC CODE
+// Takes a matrix index and returns the next index.
+//
 void updateRowCol(int* row, int *col) {
     if (*col >= 12) {
         *col = 0;
@@ -263,10 +282,19 @@ void updateRowCol(int* row, int *col) {
     }
 }
 
+// UPDATES NEEDED FOR DYNAMIC CODE
+// This function is very important.  It takes the row and column numbers
+// of a matrix (0 indexed) and returns the corresponding flat array index.
+// We use this method for matrix indexing because in our implementation 
+// we choose to pass matrices to functions as type int* (rather than int**).
 int getIndex(int row, int col) {
     return row*12+col;
 }
 
+// UPDATES NEEDED FOR DYNAMIC CODE
+// Takes two input matrices 'mat1', 'mat2', and output matrix 'mat3',
+// a row 'mat1row' and a column 'mat2col'.  It takes the dot product of 
+// the indicated row and column and stores it in the proper location of mat3  
 void rowTimesColumn(int *mat1, int *mat2, int* mat3, int mat1row, int mat2col) {
     int sum = 0, index1, index2, index3;
     for (int i=0; i<12; i++) {
@@ -278,6 +306,11 @@ void rowTimesColumn(int *mat1, int *mat2, int* mat3, int mat1row, int mat2col) {
     mat3[index3] = sum;
 }
 
+// UPDATES NEEDED FOR DYNAMIC CODE
+// A threaded function to calculate one row of the output of the dot product
+// of two matrices.  The row number is specified in 'params'.  So are the 
+// two input matrices and the output matrix.  Essentially we iterate through
+// the columns of 'mat2' and do the dot product with the indicated row of 'mat1'.
 void* calcOutputRow(void *params) {
     struct thread_params *p = (struct thread_params*)params;
     printf("Creating thread: %d\n", p->row);
@@ -288,6 +321,8 @@ void* calcOutputRow(void *params) {
     pthread_exit(NULL);
 }
 
+// UPDATES NEEDED FOR DYNAMIC CODE
+// Pretty prints a matrix to the terminal
 void printMatrix(int* matrix) {
     int index;
     for (int row=0; row<12; row++) {
