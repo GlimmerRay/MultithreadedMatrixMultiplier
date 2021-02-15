@@ -84,6 +84,8 @@ int* fileToMatrix(char* filename, FILE* fp, int* matrix) {
     return matrix;
 }
 
+// Takes a matrix index and returns the next index.
+// For example 0,1 becomes 0,2 and 1,11 becomes 2,0
 void updateRowCol(int* row, int *col) {
     if (*col >= 12) {
         *col = 0;
@@ -93,10 +95,18 @@ void updateRowCol(int* row, int *col) {
     }
 }
 
+// This function is very important.  It takes the row and column numbers
+// of a matrix (0 indexed) and returns the corresponding flat array index.
+// I use this method for matrix indexing because in my implementation 
+// I choose to pass matrices to functions as type int* (rather than int**).
 int getIndex(int row, int col) {
     return row*12+col;
 }
 
+// Takes two input matrices 'mat1', 'mat2', an output matrix 'mat3',
+// a row 'mat1row' and a column 'mat2col'.  It takes the dot product of 
+// the column and row indicated by 'mat1row' and 'mat2col'
+// and stores it in the proper index of mat3  
 void rowTimesColumn(int *mat1, int *mat2, int* mat3, int mat1row, int mat2col) {
     int sum = 0, index1, index2, index3;
     for (int i=0; i<12; i++) {
@@ -108,6 +118,11 @@ void rowTimesColumn(int *mat1, int *mat2, int* mat3, int mat1row, int mat2col) {
     mat3[index3] = sum;
 }
 
+
+// A threaded function to calculate one row of the output of the dot product
+// of two matrices.  The row number is specified in 'params'.  So are the 
+// two input matrices and the output matrix.  Essentially we iterate through
+// the columns of 'mat2' and take the dot product with the indicated row of 'mat1'.
 void* calcOutputRow(void *params) {
     struct thread_params *p = (struct thread_params*)params;
     printf("Creating thread: %d\n", p->row);
@@ -118,6 +133,7 @@ void* calcOutputRow(void *params) {
     pthread_exit(NULL);
 }
 
+// Pretty prints a matrix to the terminal
 void printMatrix(int* matrix) {
     int index;
     for (int row=0; row<12; row++) {
