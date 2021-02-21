@@ -50,6 +50,7 @@ int main(int argc, char *argv[]){
     mat2ptr = fileToMatrix(argv[2], fp2, (int*)mat2);
     int *mat3ptr = (int*)mat3;
 
+    // Creates 12 threads, each of which calculates one row of the output matrix
     for (int i=0; i<12; i++) {
         struct thread_params t_params = {mat1ptr, mat2ptr, mat3ptr, i};
         pthread_create(&threads[i], NULL, calcOutputRow, (void *)&t_params);

@@ -1,0 +1,19 @@
+Space for three 12x12 arrays (mat1, mat2, mat3) is allocated at compile time in the global namespace.
+The two input matrices are filled with data by fileToMatrix(), which takes the filenames
+specified in the command line arguments.  Then there is a loop which creates 12 threads.  Each thread is 
+responsible for calculating one row of mat3.
+
+Also of note my chosen method for implementing 2d matrices.  There are several ways of doing this 
+in c but I chose to use pointers to 1d arrays where the first 12 elements represent the first row
+of the matrix, the next 12 elements represent the second row of the matrix, and so on.  I have 
+a helper function getIndex() which converts 2d indices to 1d indices.
+
+As far as efficiency and cost goes, the efficiency of a multithreaded program improves
+on the efficiency of a single threaded program only if multiple cpu's or cores are utilized.
+So a program with 12 threads will be faster than a program with 1 thread assuming that the system
+has multiple cores and assuming that multiple cores are actually used by the program (it's not
+guaranteed).  A program with 144 threads will be faster than a program with 12 threads only if there
+are more than 12 processing units and if more than 12 processing units are utilized by the program 
+(I'm pretty sure most personal computers don't have more than 12 cores or cpus.)  Threads are lightweight
+so the cost of creating a thread is not high, but still I probably would not write a program
+with 144 threads for a personal computer because there is just no benefit to having that many threads.
