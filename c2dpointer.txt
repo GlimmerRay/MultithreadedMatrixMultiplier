@@ -1,1 +1,0 @@
-https://stackoverflow.com/questions/3911400/how-to-pass-2d-array-matrix-in-a-function-in-c
