@@ -353,7 +353,6 @@ void rowTimesColumn(int *mat1, int *mat2, int* mat3, int mat1row, int mat2col) {
 // the columns of 'mat2' and do the dot product with the indicated row of 'mat1'.
 void* calcOutputRow(void *params) {
     struct thread_params *p = (struct thread_params*)params;
-    printf("%d\n", p->row);
     // printf("Creating thread: %d\n", p->row);
     for (int col=0; col<numCols2; col++) {
         rowTimesColumn(p->mat1, p->mat2, p->mat3, p->row, col);
